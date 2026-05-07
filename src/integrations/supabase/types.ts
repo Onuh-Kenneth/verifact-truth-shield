@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      verifications: {
+        Row: {
+          claims: Json
+          created_at: string
+          credibility_score: number
+          domains: string[]
+          id: string
+          source_name: string | null
+          source_text: string
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          claims?: Json
+          created_at?: string
+          credibility_score: number
+          domains?: string[]
+          id?: string
+          source_name?: string | null
+          source_text: string
+          summary: string
+          user_id: string
+        }
+        Update: {
+          claims?: Json
+          created_at?: string
+          credibility_score?: number
+          domains?: string[]
+          id?: string
+          source_name?: string | null
+          source_text?: string
+          summary?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
