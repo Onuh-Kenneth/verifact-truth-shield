@@ -49,7 +49,32 @@ function Verify() {
   const [report, setReport] = useState<Report | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragActive) setDragActive(true);
+  };
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const f = e.dataTransfer.files?.[0];
+    if (!f) return;
+    const name = f.name.toLowerCase();
+    if (!/\.(pdf|docx|txt|md)$/.test(name)) {
+      toast.error("Unsupported file type. Use PDF, DOCX, TXT, or MD.");
+      return;
+    }
+    handleFile(f);
+  };
 
   const handleFile = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
@@ -118,7 +143,13 @@ function Verify() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
           {/* Input */}
           <section className="space-y-4">
-            <div className="rounded-2xl border border-border bg-card p-1 shadow-[var(--shadow-card)]">
+            <div
+              onDragOver={onDragOver}
+              onDragEnter={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              className={`relative rounded-2xl border bg-card p-1 shadow-[var(--shadow-card)] transition-colors ${dragActive ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
+            >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
                   <FileText className="h-4 w-4 shrink-0" />
@@ -168,6 +199,15 @@ function Verify() {
                 <span>{text.length} / 12000</span>
                 <span>Powered by Gemini</span>
               </div>
+              {dragActive && (
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-primary/10 backdrop-blur-sm">
+                  <div className="flex flex-col items-center gap-2 text-primary">
+                    <Upload className="h-8 w-8" />
+                    <div className="font-display text-lg">Drop to import</div>
+                    <div className="text-xs text-muted-foreground">PDF, DOCX, TXT, or MD</div>
+                  </div>
+                </div>
+              )}
             </div>
             <Button
               onClick={analyze}
