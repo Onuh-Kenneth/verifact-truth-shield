@@ -47,6 +47,42 @@ function Verify() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File too large (max 20MB).");
+      return;
+    }
+    setExtracting(true);
+    try {
+      const extracted = await extractTextFromFile(file);
+      if (!extracted || extracted.length < 10) {
+        toast.error("Couldn't extract readable text from this file.");
+        return;
+      }
+      const trimmed = extracted.slice(0, 12000);
+      setText(trimmed);
+      setFileName(file.name);
+      if (extracted.length > 12000) {
+        toast.info(`Imported ${file.name} (truncated to 12,000 chars).`);
+      } else {
+        toast.success(`Imported ${file.name}`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to read file");
+    } finally {
+      setExtracting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const clearFile = () => {
+    setFileName(null);
+    setText("");
+  };
 
   const analyze = async () => {
     if (text.trim().length < 10) {
@@ -83,18 +119,44 @@ function Verify() {
           {/* Input */}
           <section className="space-y-4">
             <div className="rounded-2xl border border-border bg-card p-1 shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <FileText className="h-4 w-4" />
-                  Source text
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                  <FileText className="h-4 w-4 shrink-0" />
+                  {fileName ? (
+                    <span className="flex items-center gap-1.5 truncate">
+                      <span className="truncate text-foreground">{fileName}</span>
+                      <button onClick={clearFile} className="text-muted-foreground hover:text-foreground" aria-label="Remove file">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                  ) : (
+                    "Source text"
+                  )}
                 </div>
-                <button
-                  onClick={() => setText(SAMPLE)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Try a sample
-                </button>
+                <div className="flex items-center gap-3 text-xs">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={extracting}
+                    className="inline-flex items-center gap-1 text-primary hover:underline disabled:opacity-50"
+                  >
+                    {extracting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                    {extracting ? "Reading…" : "Upload PDF / DOCX"}
+                  </button>
+                  <button onClick={() => setText(SAMPLE)} className="text-primary hover:underline">
+                    Sample
+                  </button>
+                </div>
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFile(f);
+                }}
+              />
               <Textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
