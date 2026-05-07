@@ -143,7 +143,13 @@ function Verify() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
           {/* Input */}
           <section className="space-y-4">
-            <div className="rounded-2xl border border-border bg-card p-1 shadow-[var(--shadow-card)]">
+            <div
+              onDragOver={onDragOver}
+              onDragEnter={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              className={`relative rounded-2xl border bg-card p-1 shadow-[var(--shadow-card)] transition-colors ${dragActive ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
+            >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
                   <FileText className="h-4 w-4 shrink-0" />
