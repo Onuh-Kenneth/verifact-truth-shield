@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText } from "lucide-react";
+import { useRef, useState } from "react";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { extractTextFromFile } from "@/lib/extract-document";
 
 export const Route = createFileRoute("/verify")({
   head: () => ({

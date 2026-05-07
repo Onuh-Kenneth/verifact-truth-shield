@@ -17,7 +17,6 @@ async function extractDocx(file: File): Promise<string> {
 
 async function extractPdf(file: File): Promise<string> {
   const pdfjs = await import("pdfjs-dist");
-  // @ts-expect-error - vite worker import
   const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
@@ -28,7 +27,9 @@ async function extractPdf(file: File): Promise<string> {
   for (let i = 1; i <= maxPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    text += content.items.map((it: { str?: string }) => it.str ?? "").join(" ") + "\n\n";
+    text += content.items
+      .map((it) => ("str" in it ? it.str : ""))
+      .join(" ") + "\n\n";
   }
   return text.trim();
 }
