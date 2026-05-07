@@ -199,6 +199,15 @@ function Verify() {
                 <span>{text.length} / 12000</span>
                 <span>Powered by Gemini</span>
               </div>
+              {dragActive && (
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-primary/10 backdrop-blur-sm">
+                  <div className="flex flex-col items-center gap-2 text-primary">
+                    <Upload className="h-8 w-8" />
+                    <div className="font-display text-lg">Drop to import</div>
+                    <div className="text-xs text-muted-foreground">PDF, DOCX, TXT, or MD</div>
+                  </div>
+                </div>
+              )}
             </div>
             <Button
               onClick={analyze}
