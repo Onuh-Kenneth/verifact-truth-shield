@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X, Download } from "lucide-react";
+import jsPDF from "jspdf";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -153,6 +154,49 @@ function Verify() {
     }
   };
 
+  const downloadReport = () => {
+    if (!report) return;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 48;
+    let y = margin;
+    const ensure = (h: number) => { if (y + h > pageH - margin) { doc.addPage(); y = margin; } };
+    const writeWrapped = (txt: string, size: number, opts: { bold?: boolean; color?: [number, number, number] } = {}) => {
+      doc.setFont("helvetica", opts.bold ? "bold" : "normal");
+      doc.setFontSize(size);
+      doc.setTextColor(...(opts.color ?? [20, 30, 40]));
+      const lines = doc.splitTextToSize(txt, pageW - margin * 2);
+      for (const line of lines) { ensure(size + 4); doc.text(line, margin, y); y += size + 4; }
+    };
+
+    writeWrapped("Verifact Report", 22, { bold: true, color: [30, 130, 80] });
+    writeWrapped(new Date().toLocaleString(), 10, { color: [120, 120, 120] });
+    if (fileName) writeWrapped(`Source: ${fileName}`, 10, { color: [120, 120, 120] });
+    y += 8;
+    writeWrapped(`Credibility Score: ${report.credibility_score}/100`, 14, { bold: true });
+    writeWrapped(`Claims analyzed: ${report.claims.length}`, 11, { color: [80, 80, 80] });
+    y += 6;
+    writeWrapped("Summary", 13, { bold: true });
+    writeWrapped(report.summary, 11);
+    y += 10;
+    writeWrapped("Claims", 13, { bold: true });
+    report.claims.forEach((c, i) => {
+      y += 6;
+      const colors: Record<Verdict, [number, number, number]> = {
+        true: [40, 150, 90], false: [200, 50, 50], misleading: [200, 150, 40], unverified: [120, 120, 120],
+      };
+      writeWrapped(`${i + 1}. [${verdictConfig[c.verdict].label.toUpperCase()}] (${Math.round(c.confidence * 100)}%)`, 11, { bold: true, color: colors[c.verdict] });
+      writeWrapped(c.claim, 11);
+      writeWrapped(c.reasoning, 10, { color: [90, 90, 90] });
+      if (c.evidence.length) {
+        writeWrapped("Evidence:", 10, { bold: true, color: [80, 80, 80] });
+        c.evidence.forEach((ev) => writeWrapped(`• ${ev.title} — ${ev.url}`, 9, { color: [70, 110, 170] }));
+      }
+    });
+    doc.save(`verifact-report-${Date.now()}.pdf`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -283,8 +327,11 @@ function Verify() {
                         <span className="text-2xl text-muted-foreground">/100</span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="flex flex-col items-end gap-2">
                       <div className="text-xs text-muted-foreground">{report.claims.length} claims analyzed</div>
+                      <Button size="sm" variant="outline" onClick={downloadReport}>
+                        <Download className="mr-1.5 h-3.5 w-3.5" /> Download report
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
