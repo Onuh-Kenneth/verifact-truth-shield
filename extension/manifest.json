@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Verifact — Verify with AI",
+  "version": "1.0.0",
+  "description": "Right-click any sentence on the web to verify claims with Verifact AI.",
+  "permissions": ["contextMenus", "activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_icon": "icon.png" },
+  "icons": { "48": "icon.png", "128": "icon.png" }
+}
