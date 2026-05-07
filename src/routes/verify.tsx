@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { extractTextFromFile } from "@/lib/extract-document";
+import { useUser } from "@/lib/use-user";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/verify")({
   head: () => ({
@@ -51,6 +53,7 @@ function Verify() {
   const [extracting, setExtracting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useUser();
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -122,7 +125,27 @@ function Verify() {
       });
       if (error) throw error;
       if ((data as { error?: string }).error) throw new Error((data as { error: string }).error);
-      setReport(data as Report);
+      const result = data as Report;
+      setReport(result);
+
+      if (user) {
+        const domains = Array.from(new Set(
+          result.claims.flatMap((c) => c.evidence.map((e) => {
+            try { return new URL(e.url).hostname.replace(/^www\./, ""); } catch { return null; }
+          }).filter((x): x is string => !!x))
+        ));
+        const { error: insErr } = await supabase.from("verifications").insert({
+          user_id: user.id,
+          source_text: text.slice(0, 12000),
+          source_name: fileName,
+          summary: result.summary,
+          credibility_score: result.credibility_score,
+          claims: result.claims as never,
+          domains,
+        });
+        if (insErr) console.error("save verification:", insErr);
+        else toast.success("Saved to your dashboard");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Analysis failed");
     } finally {
