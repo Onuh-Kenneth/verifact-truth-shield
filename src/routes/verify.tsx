@@ -49,7 +49,32 @@ function Verify() {
   const [report, setReport] = useState<Report | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragActive) setDragActive(true);
+  };
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const f = e.dataTransfer.files?.[0];
+    if (!f) return;
+    const name = f.name.toLowerCase();
+    if (!/\.(pdf|docx|txt|md)$/.test(name)) {
+      toast.error("Unsupported file type. Use PDF, DOCX, TXT, or MD.");
+      return;
+    }
+    handleFile(f);
+  };
 
   const handleFile = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
