@@ -1,0 +1,12 @@
+{
+  "name": "verifact-desktop",
+  "version": "1.0.0",
+  "description": "Verifact desktop — fact-check anything from anywhere on your computer",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}
