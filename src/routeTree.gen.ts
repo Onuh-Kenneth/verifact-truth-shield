@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ExtensionRouteImport } from './routes/extension'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -18,6 +19,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExtensionRoute = ExtensionRouteImport.update({
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/extension': typeof ExtensionRoute
+  '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/extension': typeof ExtensionRoute
+  '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,28 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/extension': typeof ExtensionRoute
+  '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/extension' | '/verify'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/extension'
+    | '/library'
+    | '/verify'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/extension' | '/verify'
-  id: '__root__' | '/' | '/auth' | '/dashboard' | '/extension' | '/verify'
+  to: '/' | '/auth' | '/dashboard' | '/extension' | '/library' | '/verify'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/extension'
+    | '/library'
+    | '/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +98,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   ExtensionRoute: typeof ExtensionRoute
+  LibraryRoute: typeof LibraryRoute
   VerifyRoute: typeof VerifyRoute
 }
 
@@ -86,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: '/verify'
       fullPath: '/verify'
       preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/extension': {
@@ -124,6 +154,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   ExtensionRoute: ExtensionRoute,
+  LibraryRoute: LibraryRoute,
   VerifyRoute: VerifyRoute,
 }
 export const routeTree = rootRouteImport
