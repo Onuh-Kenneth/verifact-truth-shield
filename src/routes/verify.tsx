@@ -459,7 +459,8 @@ function Verify() {
                   })}
                 </div>
               </>
-            )}
+              );
+            })()}
           </section>
         </div>
       </main>
