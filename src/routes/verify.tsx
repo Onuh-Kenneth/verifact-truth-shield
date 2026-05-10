@@ -435,7 +435,9 @@ function Verify() {
                             {c.evidence.length > 0 && (
                               <div className="mt-4 space-y-2 border-t border-border pt-3">
                                 <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Evidence</div>
-                                {c.evidence.map((ev, j) => (
+                                {c.evidence.map((ev, j) => {
+                                  const rep = reputationForUrl(ev.url);
+                                  return (
                                   <a
                                     key={j}
                                     href={ev.url}
@@ -444,12 +446,20 @@ function Verify() {
                                     className="group flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm transition-colors hover:border-primary/40 hover:bg-accent/40"
                                   >
                                     <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary" />
-                                    <div className="min-w-0">
-                                      <div className="truncate font-medium">{ev.title}</div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="truncate font-medium">{ev.title}</div>
+                                        {rep && (
+                                          <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                            {rep.label}
+                                          </span>
+                                        )}
+                                      </div>
                                       <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{ev.snippet}</div>
                                     </div>
                                   </a>
-                                ))}
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
