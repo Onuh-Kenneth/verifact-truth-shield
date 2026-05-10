@@ -15,6 +15,8 @@ import { Route as ExtensionRouteImport } from './routes/extension'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VSlugRouteImport } from './routes/v.$slug'
+import { Route as ApiBadgeSlugRouteImport } from './routes/api/badge.$slug'
 
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
@@ -46,6 +48,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VSlugRoute = VSlugRouteImport.update({
+  id: '/v/$slug',
+  path: '/v/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBadgeSlugRoute = ApiBadgeSlugRouteImport.update({
+  id: '/api/badge/$slug',
+  path: '/api/badge/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/extension': typeof ExtensionRoute
   '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
+  '/v/$slug': typeof VSlugRoute
+  '/api/badge/$slug': typeof ApiBadgeSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +76,8 @@ export interface FileRoutesByTo {
   '/extension': typeof ExtensionRoute
   '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
+  '/v/$slug': typeof VSlugRoute
+  '/api/badge/$slug': typeof ApiBadgeSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +87,8 @@ export interface FileRoutesById {
   '/extension': typeof ExtensionRoute
   '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
+  '/v/$slug': typeof VSlugRoute
+  '/api/badge/$slug': typeof ApiBadgeSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +99,18 @@ export interface FileRouteTypes {
     | '/extension'
     | '/library'
     | '/verify'
+    | '/v/$slug'
+    | '/api/badge/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/extension' | '/library' | '/verify'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/extension'
+    | '/library'
+    | '/verify'
+    | '/v/$slug'
+    | '/api/badge/$slug'
   id:
     | '__root__'
     | '/'
@@ -91,6 +119,8 @@ export interface FileRouteTypes {
     | '/extension'
     | '/library'
     | '/verify'
+    | '/v/$slug'
+    | '/api/badge/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,6 +130,8 @@ export interface RootRouteChildren {
   ExtensionRoute: typeof ExtensionRoute
   LibraryRoute: typeof LibraryRoute
   VerifyRoute: typeof VerifyRoute
+  VSlugRoute: typeof VSlugRoute
+  ApiBadgeSlugRoute: typeof ApiBadgeSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -146,6 +178,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/v/$slug': {
+      id: '/v/$slug'
+      path: '/v/$slug'
+      fullPath: '/v/$slug'
+      preLoaderRoute: typeof VSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/badge/$slug': {
+      id: '/api/badge/$slug'
+      path: '/api/badge/$slug'
+      fullPath: '/api/badge/$slug'
+      preLoaderRoute: typeof ApiBadgeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -156,17 +202,9 @@ const rootRouteChildren: RootRouteChildren = {
   ExtensionRoute: ExtensionRoute,
   LibraryRoute: LibraryRoute,
   VerifyRoute: VerifyRoute,
+  VSlugRoute: VSlugRoute,
+  ApiBadgeSlugRoute: ApiBadgeSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

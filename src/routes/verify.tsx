@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X, Download } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X, Download, Share2, ShieldCheck } from "lucide-react";
 import jsPDF from "jspdf";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { extractTextFromFile } from "@/lib/extract-document";
 import { useUser } from "@/lib/use-user";
 import { Link } from "@tanstack/react-router";
+import { reputationForUrl, weightedCredibility } from "@/lib/source-reputation";
 
 export const Route = createFileRoute("/verify")({
   head: () => ({
@@ -50,11 +51,23 @@ function Verify() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [shareSlug, setShareSlug] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!localStorage.getItem("verifact:visited")) {
+      setText(SAMPLE);
+      localStorage.setItem("verifact:visited", "1");
+      toast.info("Try the demo — hit Verify claims to see how Verifact works.", { duration: 4500 });
+    }
+  }, []);
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -120,6 +133,8 @@ function Verify() {
     }
     setLoading(true);
     setReport(null);
+    setSavedId(null);
+    setShareSlug(null);
     try {
       const { data, error } = await supabase.functions.invoke("verify-claims", {
         body: { text },
@@ -135,7 +150,7 @@ function Verify() {
             try { return new URL(e.url).hostname.replace(/^www\./, ""); } catch { return null; }
           }).filter((x): x is string => !!x))
         ));
-        const { error: insErr } = await supabase.from("verifications").insert({
+        const { data: ins, error: insErr } = await supabase.from("verifications").insert({
           user_id: user.id,
           source_text: text.slice(0, 12000),
           source_name: fileName,
@@ -143,14 +158,41 @@ function Verify() {
           credibility_score: result.credibility_score,
           claims: result.claims as never,
           domains,
-        });
+        }).select("id").single();
         if (insErr) console.error("save verification:", insErr);
-        else toast.success("Saved to your dashboard");
+        else {
+          setSavedId(ins.id);
+          toast.success("Saved to your dashboard");
+        }
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Analysis failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const makePublic = async () => {
+    if (!savedId) {
+      toast.error(user ? "Run a verification first." : "Sign in to share verifications.");
+      return;
+    }
+    setSharing(true);
+    try {
+      const slug = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      const { error } = await supabase
+        .from("verifications")
+        .update({ is_public: true, share_slug: slug })
+        .eq("id", savedId);
+      if (error) throw error;
+      setShareSlug(slug);
+      const url = `${window.location.origin}/v/${slug}`;
+      await navigator.clipboard.writeText(url).catch(() => {});
+      toast.success("Public trust page ready — link copied", { duration: 5000 });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't publish");
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -315,35 +357,54 @@ function Verify() {
               </div>
             )}
 
-            {report && (
+            {report && (() => {
+              const evidenceUrls = report.claims.flatMap((c) => c.evidence.map((e) => e.url));
+              const w = weightedCredibility(report.credibility_score, evidenceUrls);
+              return (
               <>
                 {/* Score */}
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Credibility Index</div>
+                      <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Weighted Credibility</div>
                       <div className="mt-2 font-display text-5xl tracking-tight">
-                        {report.credibility_score}
+                        {w.weighted}
                         <span className="text-2xl text-muted-foreground">/100</span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Raw {report.credibility_score} · Source avg {w.avgReputation}/100 · {w.delta >= 0 ? "+" : ""}{w.delta} from sources
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className="text-xs text-muted-foreground">{report.claims.length} claims analyzed</div>
-                      <Button size="sm" variant="outline" onClick={downloadReport}>
-                        <Download className="mr-1.5 h-3.5 w-3.5" /> Download report
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={downloadReport}>
+                          <Download className="mr-1.5 h-3.5 w-3.5" /> PDF
+                        </Button>
+                        {savedId && !shareSlug && (
+                          <Button size="sm" onClick={makePublic} disabled={sharing}>
+                            <Share2 className="mr-1.5 h-3.5 w-3.5" /> {sharing ? "Publishing…" : "Share"}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${report.credibility_score}%`,
-                        background: "var(--gradient-orb)",
-                      }}
+                      style={{ width: `${w.weighted}%`, background: "var(--gradient-orb)" }}
                     />
                   </div>
                   <p className="mt-4 text-sm text-muted-foreground">{report.summary}</p>
+                  {shareSlug && (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl border border-primary/30 bg-accent/40 p-3 text-sm">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">Public trust page:</span>
+                      <Link to="/v/$slug" params={{ slug: shareSlug }} className="truncate font-medium text-primary hover:underline">
+                        /v/{shareSlug}
+                      </Link>
+                    </div>
+                  )}
                 </div>
 
                 {/* Claims */}
@@ -374,7 +435,9 @@ function Verify() {
                             {c.evidence.length > 0 && (
                               <div className="mt-4 space-y-2 border-t border-border pt-3">
                                 <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Evidence</div>
-                                {c.evidence.map((ev, j) => (
+                                {c.evidence.map((ev, j) => {
+                                  const rep = reputationForUrl(ev.url);
+                                  return (
                                   <a
                                     key={j}
                                     href={ev.url}
@@ -383,12 +446,20 @@ function Verify() {
                                     className="group flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm transition-colors hover:border-primary/40 hover:bg-accent/40"
                                   >
                                     <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary" />
-                                    <div className="min-w-0">
-                                      <div className="truncate font-medium">{ev.title}</div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="truncate font-medium">{ev.title}</div>
+                                        {rep && (
+                                          <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                            {rep.label}
+                                          </span>
+                                        )}
+                                      </div>
                                       <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{ev.snippet}</div>
                                     </div>
                                   </a>
-                                ))}
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
@@ -398,7 +469,8 @@ function Verify() {
                   })}
                 </div>
               </>
-            )}
+              );
+            })()}
           </section>
         </div>
       </main>
