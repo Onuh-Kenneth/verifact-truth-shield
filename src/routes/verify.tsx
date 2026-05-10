@@ -133,6 +133,8 @@ function Verify() {
     }
     setLoading(true);
     setReport(null);
+    setSavedId(null);
+    setShareSlug(null);
     try {
       const { data, error } = await supabase.functions.invoke("verify-claims", {
         body: { text },
@@ -148,7 +150,7 @@ function Verify() {
             try { return new URL(e.url).hostname.replace(/^www\./, ""); } catch { return null; }
           }).filter((x): x is string => !!x))
         ));
-        const { error: insErr } = await supabase.from("verifications").insert({
+        const { data: ins, error: insErr } = await supabase.from("verifications").insert({
           user_id: user.id,
           source_text: text.slice(0, 12000),
           source_name: fileName,
@@ -156,14 +158,41 @@ function Verify() {
           credibility_score: result.credibility_score,
           claims: result.claims as never,
           domains,
-        });
+        }).select("id").single();
         if (insErr) console.error("save verification:", insErr);
-        else toast.success("Saved to your dashboard");
+        else {
+          setSavedId(ins.id);
+          toast.success("Saved to your dashboard");
+        }
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Analysis failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const makePublic = async () => {
+    if (!savedId) {
+      toast.error(user ? "Run a verification first." : "Sign in to share verifications.");
+      return;
+    }
+    setSharing(true);
+    try {
+      const slug = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      const { error } = await supabase
+        .from("verifications")
+        .update({ is_public: true, share_slug: slug })
+        .eq("id", savedId);
+      if (error) throw error;
+      setShareSlug(slug);
+      const url = `${window.location.origin}/v/${slug}`;
+      await navigator.clipboard.writeText(url).catch(() => {});
+      toast.success("Public trust page ready — link copied", { duration: 5000 });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't publish");
+    } finally {
+      setSharing(false);
     }
   };
 
