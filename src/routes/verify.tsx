@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X, Download } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X, Download, Share2, ShieldCheck } from "lucide-react";
 import jsPDF from "jspdf";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { extractTextFromFile } from "@/lib/extract-document";
 import { useUser } from "@/lib/use-user";
 import { Link } from "@tanstack/react-router";
+import { reputationForUrl, weightedCredibility } from "@/lib/source-reputation";
 
 export const Route = createFileRoute("/verify")({
   head: () => ({
@@ -50,11 +51,23 @@ function Verify() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [shareSlug, setShareSlug] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!localStorage.getItem("verifact:visited")) {
+      setText(SAMPLE);
+      localStorage.setItem("verifact:visited", "1");
+      toast.info("Try the demo — hit Verify claims to see how Verifact works.", { duration: 4500 });
+    }
+  }, []);
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
