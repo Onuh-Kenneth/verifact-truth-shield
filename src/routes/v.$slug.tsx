@@ -74,7 +74,7 @@ const verdictConfig: Record<Verdict, { icon: typeof CheckCircle2; label: string;
 };
 
 function PublicTrustPage() {
-  const data = Route.useLoaderData();
+  const data = Route.useLoaderData() as PublicVerification;
   const [showEmbed, setShowEmbed] = useState(false);
 
   const evidenceUrls = data.claims.flatMap((c) => c.evidence.map((e) => e.url));
