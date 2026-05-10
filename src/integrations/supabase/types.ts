@@ -21,6 +21,8 @@ export type Database = {
           credibility_score: number
           domains: string[]
           id: string
+          is_public: boolean
+          share_slug: string | null
           source_name: string | null
           source_text: string
           summary: string
@@ -32,6 +34,8 @@ export type Database = {
           credibility_score: number
           domains?: string[]
           id?: string
+          is_public?: boolean
+          share_slug?: string | null
           source_name?: string | null
           source_text: string
           summary: string
@@ -43,6 +47,8 @@ export type Database = {
           credibility_score?: number
           domains?: string[]
           id?: string
+          is_public?: boolean
+          share_slug?: string | null
           source_name?: string | null
           source_text?: string
           summary?: string
