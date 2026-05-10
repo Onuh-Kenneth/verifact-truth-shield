@@ -357,35 +357,54 @@ function Verify() {
               </div>
             )}
 
-            {report && (
+            {report && (() => {
+              const evidenceUrls = report.claims.flatMap((c) => c.evidence.map((e) => e.url));
+              const w = weightedCredibility(report.credibility_score, evidenceUrls);
+              return (
               <>
                 {/* Score */}
                 <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Credibility Index</div>
+                      <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Weighted Credibility</div>
                       <div className="mt-2 font-display text-5xl tracking-tight">
-                        {report.credibility_score}
+                        {w.weighted}
                         <span className="text-2xl text-muted-foreground">/100</span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Raw {report.credibility_score} · Source avg {w.avgReputation}/100 · {w.delta >= 0 ? "+" : ""}{w.delta} from sources
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className="text-xs text-muted-foreground">{report.claims.length} claims analyzed</div>
-                      <Button size="sm" variant="outline" onClick={downloadReport}>
-                        <Download className="mr-1.5 h-3.5 w-3.5" /> Download report
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={downloadReport}>
+                          <Download className="mr-1.5 h-3.5 w-3.5" /> PDF
+                        </Button>
+                        {savedId && !shareSlug && (
+                          <Button size="sm" onClick={makePublic} disabled={sharing}>
+                            <Share2 className="mr-1.5 h-3.5 w-3.5" /> {sharing ? "Publishing…" : "Share"}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${report.credibility_score}%`,
-                        background: "var(--gradient-orb)",
-                      }}
+                      style={{ width: `${w.weighted}%`, background: "var(--gradient-orb)" }}
                     />
                   </div>
                   <p className="mt-4 text-sm text-muted-foreground">{report.summary}</p>
+                  {shareSlug && (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl border border-primary/30 bg-accent/40 p-3 text-sm">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">Public trust page:</span>
+                      <Link to="/v/$slug" params={{ slug: shareSlug }} className="truncate font-medium text-primary hover:underline">
+                        /v/{shareSlug}
+                      </Link>
+                    </div>
+                  )}
                 </div>
 
                 {/* Claims */}
