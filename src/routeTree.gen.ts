@@ -16,6 +16,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VSlugRouteImport } from './routes/v.$slug'
+import { Route as ApiBadgeSlugRouteImport } from './routes/api/badge.$slug'
 
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
@@ -52,6 +53,11 @@ const VSlugRoute = VSlugRouteImport.update({
   path: '/v/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBadgeSlugRoute = ApiBadgeSlugRouteImport.update({
+  id: '/api/badge/$slug',
+  path: '/api/badge/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
   '/v/$slug': typeof VSlugRoute
+  '/api/badge/$slug': typeof ApiBadgeSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
   '/v/$slug': typeof VSlugRoute
+  '/api/badge/$slug': typeof ApiBadgeSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/verify': typeof VerifyRoute
   '/v/$slug': typeof VSlugRoute
+  '/api/badge/$slug': typeof ApiBadgeSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/verify'
     | '/v/$slug'
+    | '/api/badge/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/verify'
     | '/v/$slug'
+    | '/api/badge/$slug'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/verify'
     | '/v/$slug'
+    | '/api/badge/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   VerifyRoute: typeof VerifyRoute
   VSlugRoute: typeof VSlugRoute
+  ApiBadgeSlugRoute: typeof ApiBadgeSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/badge/$slug': {
+      id: '/api/badge/$slug'
+      path: '/api/badge/$slug'
+      fullPath: '/api/badge/$slug'
+      preLoaderRoute: typeof ApiBadgeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,7 +203,18 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   VerifyRoute: VerifyRoute,
   VSlugRoute: VSlugRoute,
+  ApiBadgeSlugRoute: ApiBadgeSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
