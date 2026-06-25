@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X, Download, Share2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2, Sparkles, ExternalLink, FileText, Upload, X, Download, Share2, ShieldCheck, Flag } from "lucide-react";
 import jsPDF from "jspdf";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -431,6 +432,21 @@ function Verify() {
                             </div>
                             <p className="mt-2 text-[15px] leading-relaxed">{c.claim}</p>
                             <p className="mt-2 text-sm text-muted-foreground">{c.reasoning}</p>
+                            <button
+                              onClick={() => {
+                                try {
+                                  const key = "verifact:reports";
+                                  const prev = JSON.parse(localStorage.getItem(key) || "[]") as unknown[];
+                                  prev.push({ claim: c.claim, verdict: c.verdict, reportedAt: new Date().toISOString() });
+                                  localStorage.setItem(key, JSON.stringify(prev.slice(-50)));
+                                } catch { /* ignore */ }
+                                toast.success("Thanks — we'll review this verdict.");
+                              }}
+                              className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Flag className="h-3 w-3" /> Report incorrect verdict
+                            </button>
+
 
                             {c.evidence.length > 0 && (
                               <div className="mt-4 space-y-2 border-t border-border pt-3">
@@ -474,6 +490,7 @@ function Verify() {
           </section>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
