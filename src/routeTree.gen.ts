@@ -10,6 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ExtensionRouteImport } from './routes/extension'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -21,6 +24,21 @@ import { Route as ApiBadgeSlugRouteImport } from './routes/api/badge.$slug'
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -65,6 +83,9 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/extension': typeof ExtensionRoute
   '/library': typeof LibraryRoute
+  '/methodology': typeof MethodologyRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
   '/v/$slug': typeof VSlugRoute
   '/api/badge/$slug': typeof ApiBadgeSlugRoute
@@ -75,6 +96,9 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/extension': typeof ExtensionRoute
   '/library': typeof LibraryRoute
+  '/methodology': typeof MethodologyRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
   '/v/$slug': typeof VSlugRoute
   '/api/badge/$slug': typeof ApiBadgeSlugRoute
@@ -86,6 +110,9 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/extension': typeof ExtensionRoute
   '/library': typeof LibraryRoute
+  '/methodology': typeof MethodologyRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
   '/v/$slug': typeof VSlugRoute
   '/api/badge/$slug': typeof ApiBadgeSlugRoute
@@ -98,6 +125,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/extension'
     | '/library'
+    | '/methodology'
+    | '/privacy'
+    | '/terms'
     | '/verify'
     | '/v/$slug'
     | '/api/badge/$slug'
@@ -108,6 +138,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/extension'
     | '/library'
+    | '/methodology'
+    | '/privacy'
+    | '/terms'
     | '/verify'
     | '/v/$slug'
     | '/api/badge/$slug'
@@ -118,6 +151,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/extension'
     | '/library'
+    | '/methodology'
+    | '/privacy'
+    | '/terms'
     | '/verify'
     | '/v/$slug'
     | '/api/badge/$slug'
@@ -129,6 +165,9 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ExtensionRoute: typeof ExtensionRoute
   LibraryRoute: typeof LibraryRoute
+  MethodologyRoute: typeof MethodologyRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   VerifyRoute: typeof VerifyRoute
   VSlugRoute: typeof VSlugRoute
   ApiBadgeSlugRoute: typeof ApiBadgeSlugRoute
@@ -141,6 +180,27 @@ declare module '@tanstack/react-router' {
       path: '/verify'
       fullPath: '/verify'
       preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -201,6 +261,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ExtensionRoute: ExtensionRoute,
   LibraryRoute: LibraryRoute,
+  MethodologyRoute: MethodologyRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   VerifyRoute: VerifyRoute,
   VSlugRoute: VSlugRoute,
   ApiBadgeSlugRoute: ApiBadgeSlugRoute,
